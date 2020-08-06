@@ -8,12 +8,14 @@ import org.apache.lucene.document.*;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
 import org.apache.lucene.queryparser.xml.builders.RangeQueryBuilder;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.springframework.format.datetime.joda.LocalDateParser;
@@ -48,7 +50,8 @@ class DemoLuceneApplicationTests {
             doc.add(new StringField("id", emplyee.getId().toString(), Field.Store.YES));
             doc.add(new StringField("name", emplyee.getName(), Field.Store.YES));
             doc.add(new IntPoint("age", emplyee.getAge()));
-            doc.add(new StringField("birth", dtf.format(emplyee.getBirth()), Field.Store.YES));
+//            doc.add(new StringField("birth", dtf.format(emplyee.getBirth()), Field.Store.YES));
+            doc.add(new StringField("birth", String.valueOf(emplyee.getBirth()), Field.Store.YES));
             doc.add(new TextField("address", emplyee.getAddress(), Field.Store.YES));
             docList.add(doc);
         }
@@ -71,12 +74,14 @@ class DemoLuceneApplicationTests {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             builder.add(query1, BooleanClause.Occur.MUST);
             builder.add(query2, BooleanClause.Occur.MUST);
+            TermRangeQuery query = new TermRangeQuery("birth", new BytesRef("1996-10-06"), new BytesRef("2020-08-08"), false, true);
 
             Directory dir = FSDirectory.open(Paths.get(PATH_INDEX));
             IndexSearcher searcher = new IndexSearcher(DirectoryReader.open(dir));
 //            TopDocs docs = searcher.search(queryParser.parse("江苏南京"), 10);
 //            TopDocs docs = searcher.search(query2, 10);
-            TopDocs docs = searcher.search(builder.build(), 10);
+//            TopDocs docs = searcher.search(builder.build(), 10);
+            TopDocs docs = searcher.search(query, 10);
             log.info("docs num:{}", docs.totalHits);
             for (ScoreDoc scoreDoc : docs.scoreDocs) {
                 Document doc = searcher.doc(scoreDoc.doc);
